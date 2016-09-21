@@ -4,7 +4,8 @@ import reducer, {
     START_LOADING_FROM_SOURCE,
     DONE_LOADING_FROM_SOURCE,
     setInitialAnimationList,
-    deleteAnimation
+    deleteAnimation,
+    addBlankAnimation
 } from '@cdo/apps/gamelab/animationListModule';
 import animationTab from '@cdo/apps/gamelab/AnimationTab/animationTabModule';
 import {EMPTY_IMAGE} from '@cdo/apps/gamelab/constants';
@@ -90,9 +91,9 @@ describe('animationListModule', function () {
   let createAnimationList = function (count) {
     let orderedKeys = [];
     let propsByKey = {};
-    let baseKey = 'anim';
-    for (let i = 0; i < count; i++) {
-      let key = baseKey + i;
+    let baseKey = 'animation';
+    for (let i = 1; i <= count; i++) {
+      let key = baseKey + '_' + i;
       orderedKeys.push(key);
 
       propsByKey[key] = {
@@ -128,7 +129,7 @@ describe('animationListModule', function () {
     });
 
     it('when animationList has 1 item, selectedAnimation should be the animation', function () {
-      const key0 = 'anim0';
+      const key0 = 'animation_1';
       let animationList = createAnimationList(1);
 
       store.dispatch(setInitialAnimationList(animationList));
@@ -136,7 +137,7 @@ describe('animationListModule', function () {
     });
 
     it('when animationList has multiple items, selectedAnimation should be the first animation', function () {
-      const key0 = 'anim0';
+      const key0 = 'animation_1';
       let animationList = createAnimationList(2);
 
       store.dispatch(setInitialAnimationList(animationList));
@@ -144,7 +145,7 @@ describe('animationListModule', function () {
     });
 
     it('when animationList has 0 items, selectedAnimation should be the empty string', function () {
-      const key0 = 'anim0';
+      const key0 = 'animation_1';
       let animationList = {
         orderedKeys: [],
         propsByKey: {}
@@ -175,8 +176,8 @@ describe('animationListModule', function () {
     });
 
     it('deleting the first animation reselects the next animation in the animationList', function () {
-      const key0 = 'anim0';
-      const key1 = 'anim1';
+      const key0 = 'animation_1';
+      const key1 = 'animation_2';
       let animationList = createAnimationList(2);
 
       let store = createStore(combineReducers({animationList: reducer, animationTab}), {});
@@ -186,8 +187,8 @@ describe('animationListModule', function () {
     });
 
     it('deleting an animation reselects the previous animation in the animationList', function () {
-      const key0 = 'anim0';
-      const key1 = 'anim1';
+      const key0 = 'animation_1';
+      const key1 = 'animation_2';
       let animationList = createAnimationList(2);
 
       let store = createStore(combineReducers({animationList: reducer, animationTab}), {});
@@ -197,7 +198,7 @@ describe('animationListModule', function () {
     });
 
     it('deleting an animation deselects when there are no other animations in the animationList', function () {
-      const key0 = 'anim0';
+      const key0 = 'animation_1';
       let animationList = createAnimationList(1);
       let store = createStore(combineReducers({animationList: reducer, animationTab}), {});
       store.dispatch(setInitialAnimationList(animationList));
@@ -206,4 +207,55 @@ describe('animationListModule', function () {
     });
   });
 
+  describe('action: add blank animation', function () {
+    let oldWindowDashboard, server, store;
+    beforeEach(function () {
+      oldWindowDashboard = window.dashboard;
+      window.dashboard = {
+        project: {
+          getCurrentId() {return '';},
+          projectChanged() {return '';}
+        }
+      };
+      server = sinon.fakeServer.create();
+      server.respondWith('imageBody');
+      store = createStore(combineReducers({animationList: reducer, animationTab}), {});
+    });
+
+    afterEach(function () {
+      server.restore();
+      window.dashboard = oldWindowDashboard;
+    });
+
+    it('new blank animations get name animation_1 when it is the first blank animation', function () {
+      store.dispatch(addBlankAnimation());
+      let blankAnimationKey = store.getState().animationList.orderedKeys[0];
+      expect(store.getState().animationList.propsByKey[blankAnimationKey].name).to.equal('animation_1');
+    });
+
+    it('new blank animations get name next available number appended', function () {
+      const key0 = 'animation_1';
+      const key1 = 'animation_2';
+      let animationList = createAnimationList(2);
+      store.dispatch(setInitialAnimationList(animationList));
+      store.dispatch(addBlankAnimation());
+
+      let blankAnimationKey = store.getState().animationList.orderedKeys[2];
+      expect(store.getState().animationList.propsByKey[blankAnimationKey].name).to.equal('animation_3');
+    });
+
+    it('new blank animations get name next available number appended when available number is in the middle of the list', function () {
+      const key0 = 'animation_1';
+      const key1 = 'animation_2';
+      const key2 = 'animation_3';
+      let animationList = createAnimationList(3);
+      store.dispatch(setInitialAnimationList(animationList));
+      store.dispatch(deleteAnimation(key1));
+      expect(store.getState().animationList.orderedKeys.length).to.equal(2);
+      store.dispatch(addBlankAnimation());
+      expect(store.getState().animationList.orderedKeys.length).to.equal(3);
+      let blankAnimationKey = store.getState().animationList.orderedKeys[2];
+      expect(store.getState().animationList.propsByKey[blankAnimationKey].name).to.equal('animation_2');
+    });
+  });
 });
