@@ -5,7 +5,8 @@ import reducer, {
     DONE_LOADING_FROM_SOURCE,
     setInitialAnimationList,
     deleteAnimation,
-    addBlankAnimation
+    addBlankAnimation,
+    addLibraryAnimation
 } from '@cdo/apps/gamelab/animationListModule';
 import animationTab from '@cdo/apps/gamelab/AnimationTab/animationTabModule';
 import {EMPTY_IMAGE} from '@cdo/apps/gamelab/constants';
@@ -256,6 +257,46 @@ describe('animationListModule', function () {
       expect(store.getState().animationList.orderedKeys.length).to.equal(3);
       let blankAnimationKey = store.getState().animationList.orderedKeys[2];
       expect(store.getState().animationList.propsByKey[blankAnimationKey].name).to.equal('animation_2');
+    });
+  });
+
+  describe('action: add library animation', function () {
+    let oldWindowDashboard, server, store;
+    beforeEach(function () {
+      oldWindowDashboard = window.dashboard;
+      window.dashboard = {
+        project: {
+          getCurrentId() {return '';},
+          projectChanged() {return '';}
+        }
+      };
+      server = sinon.fakeServer.create();
+      server.respondWith('imageBody');
+      store = createStore(combineReducers({animationList: reducer, animationTab}), {});
+    });
+
+    afterEach(function () {
+      server.restore();
+      window.dashboard = oldWindowDashboard;
+    });
+
+    it('new blank animations get name animation_1 when it is the first blank animation', function () {
+      const libraryAnimProps = {
+        name: 'animation',
+        sourceUrl: 'url',
+        frameSize: {x: 100, y: 100},
+        frameCount: 1,
+        looping: true,
+        frameDelay: 4,
+        version: null
+      };
+      store.dispatch(addLibraryAnimation(libraryAnimProps));
+      let blankAnimationKey1 = store.getState().animationList.orderedKeys[0];
+      expect(store.getState().animationList.propsByKey[blankAnimationKey1].name).to.equal('animation_1');
+
+      store.dispatch(addLibraryAnimation(libraryAnimProps));
+      let blankAnimationKey2 = store.getState().animationList.orderedKeys[1];
+      expect(store.getState().animationList.propsByKey[blankAnimationKey2].name).to.equal('animation_2');
     });
   });
 });
