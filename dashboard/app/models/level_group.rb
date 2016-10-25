@@ -113,29 +113,31 @@ ruby
   # Returns survey results for a single LevelGroup level by students in a single section.
   def self.get_levelgroup_survey_results(script_level, section)
     # Go through each sublevel
-    script_level.level.levels.map do |sublevel|
-      question_text = sublevel.properties.try(:[], "questions").try(:[], 0).try(:[], "text") ||
-                      sublevel.properties.try(:[], "markdown_instructions")
+    script_level.levels.flat_map do |level|
+      level.levels.map do |sublevel|
+        question_text = sublevel.properties.try(:[], "questions").try(:[], 0).try(:[], "text") ||
+                        sublevel.properties.try(:[], "markdown_instructions")
 
-      # Go through each student, and make sure to shuffle their results for additional
-      # anonymity.
-      results = section.students.map do |student|
-        # Skip student if they haven't submitted for this LevelGroup.
-        user_level = student.user_level_for(script_level, script_level.level)
-        next unless user_level.try(:submitted)
+        # Go through each student, and make sure to shuffle their results for additional
+        # anonymity.
+        results = section.students.map do |student|
+          # Skip student if they haven't submitted for this LevelGroup.
+          user_level = student.user_level_for(script_level, level)
+          next unless user_level.try(:submitted)
 
-        get_sublevel_result(sublevel, student.last_attempt(sublevel).try(:level_source).try(:data))
-      end.compact.shuffle
+          get_sublevel_result(sublevel, student.last_attempt(sublevel).try(:level_source).try(:data))
+        end.compact.shuffle
 
-      answers = sublevel.properties.try(:[], "answers")
-      answer_texts = answers.map{|answer| answer["text"]} if answers
+        answers = sublevel.properties.try(:[], "answers")
+        answer_texts = answers.map{|answer| answer["text"]} if answers
 
-      {
-        type: sublevel.type.underscore,
-        question: question_text,
-        results: results,
-        answer_texts: answer_texts
-      }
+        {
+          type: sublevel.type.underscore,
+          question: question_text,
+          results: results,
+          answer_texts: answer_texts
+        }
+      end
     end
   end
 
