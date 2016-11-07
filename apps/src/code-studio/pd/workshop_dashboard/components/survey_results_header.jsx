@@ -95,6 +95,11 @@ const SurveyResultsHeader = React.createClass({
       return workshop.course === course;
     });
 
+    filteredWorkshops = _.sortBy(filteredWorkshops, workshop => {
+      const firstSession = workshop.sessions[0];
+      return firstSession ? firstSession.start : 0;
+    });
+
     let firstWorkshopId = this.props.organizerView ? undefined : (filteredWorkshops[0] ? filteredWorkshops[0].id : undefined);
 
     this.setState({
