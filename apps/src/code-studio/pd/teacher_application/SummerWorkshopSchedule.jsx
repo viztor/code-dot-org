@@ -8,66 +8,77 @@ const group2OrGroup1CsdWorkshops = {
 };
 
 const group1CspWorkshops = {
-  'AL': [{region: 'Alabama', workshopDates: ''}],
-  'AZ': [{region: 'Arizona (Phoenix)', workshopDates: ''}],
-  'CA': [
-    {region: 'California (Inland Empire)', workshopDates: 'June 19 - 23, 2017'},
-    {region: 'California (Los Angeles/Orange County)', workshopDates: ''},
-    {region: 'California (Oakland)', workshopDates: ''}
-  ],
-  'FL': [
-    {region: 'Florida (Broward)', workshopDates: ''},
-    {region: 'Florida (Miami)', workshopDates: ''},
-    {region: 'Florida (Northeast)', workshopDates: ''},
-    {region: 'Florida (Orlando)', workshopDates: ''}
-  ],
-  'GA': [{region: 'Georgia', workshopDates: ''}],
-  'ID': [{region: 'Idaho', workshopDates: 'June 19 - 23, 2017'}],
-  'IL': [{region: 'Illinois (Chicago)', workshopDates: ''}],
-  'IN': [{region: 'Indiana', workshopDates: ''}],
-  'MD': [
-    {region: 'Maryland (Northern)', workshopDates: 'August 7 - 11, 2017'},
-    {region: 'Maryland (Southern)', workshopDates: 'August 7 - 11, 2017'}
-  ],
-  'NV': [{region: 'Nevada', workshopDates: ''}],
-  'NY': [{region: 'New York', workshopDates: 'July 10 - 14, 2017'}],
-  'NC': [{region: 'North Carolina (Durham)', workshopDates: 'July 10 - 14, 2017'}],
-  'OH': [{region: 'Ohio', workshopDates: ''}],
-  'TX': [{region: 'Texas (Houston)', workshopDates: 'June 26 - 30, 2017'}],
-  'UT': [{region: 'Utah', workshopDates: ''}],
-  'VA': [{region: 'Virginia (Richmond)', workshopDates: 'July 17 - 21, 2017'}],
-  'WA': [
-    {region: 'Washington (Puget Sound)', workshopDates: 'July 10 - 14, 2017'},
-    {region: 'Washington (Spokane)', workshopDates: 'July 10 - 14, 2017'}
-  ]
+  'A+ College Ready': {region: 'Alabama', workshopDates: ''},
+  'Grand Canyon University & Science Foundation Arizona': {region: 'Arizona (Phoenix)', workshopDates: ''},
+  'Riverside County Office of Education': {region: 'California (Inland Empire)', workshopDates: 'June 19 - 23, 2017'},
+  '9 Dots Community Learning Center': {region: 'California (Los Angeles/Orange County)', workshopDates: ''},
+  'Alameda County Office of Education': {region: 'California (Oakland)', workshopDates: ''},
+  'Broward County Public Schools': {region: 'Florida (Miami / Broward)', workshopDates: ''},
+  'Florida State College Jacksonville': {region: 'Florida (Northeast)', workshopDates: ''},
+  'Orlando Science Center': {region: 'Florida (Orlando)', workshopDates: ''},
+  'Georgia Tech Center for Education Integrating Science, Mathematics, and Computing': {region: 'Georgia', workshopDates: ''},
+  'Idaho Digital Learning Academy': {region: 'Idaho', workshopDates: 'June 19 - 23, 2017'},
+  'Lumity': {region: 'Illinois (Chicago)', workshopDates: ''},
+  'Nextech': {region: 'Indiana', workshopDates: ''},
+  'The Council of Educational Administrative and Supervisory Organizations of Maryland (CEASOM)': {region: 'Maryland', workshopDates: 'August 7 - 11, 2017'},
+  'Southern Nevada Regional Professional Development Program': {region: 'Nevada', workshopDates: ''},
+  'Code/Interactive': {region: 'New York', workshopDates: 'July 10 - 14, 2017'},
+  'The Friday Institute': {region: 'North Carolina (Durham)', workshopDates: 'July 10 - 14, 2017'},
+  'Battelle Education': {region: 'Ohio', workshopDates: ''},
+  'Rice University': {region: 'Texas (Houston)', workshopDates: 'June 26 - 30, 2017'},
+  'Utah STEM Action Center and Utah Board of Education': {region: 'Utah', workshopDates: ''},
+  'CodeVA': {region: 'Virginia (Richmond)', workshopDates: 'July 17 - 21, 2017'},
+  'Puget Sound Educational Service District': {region: 'Washington (Puget Sound)', workshopDates: 'July 10 - 14, 2017'},
+  'NorthEast Washington Educational Service District 101': {region: 'Washington (Spokane)', workshopDates: 'July 10 - 14, 2017'}
 };
 
 const SummerWorkshopSchedule = React.createClass({
   propTypes: {
     regionalPartnerGroup: React.PropTypes.number,
+    regionalPartnerName: React.PropTypes.string,
     selectedCourse: React.PropTypes.string,
-    selectedState: React.PropTypes.string
+    selectedState: React.PropTypes.string,
+    onAssignedWorkshopFound: React.PropTypes.func
   },
 
-  renderGroup1CsdOrGroup2AssignedWorkshop() {
-    if (this.props.regionalPartnerGroup === 2 ||
-      (this.props.regionalPartnerGroup === 1 && this.props.selectedCourse === 'csd')) {
-      let assignedSummerWorkshop = `Summer 2017 (exact date to be determined) in ${this.props.selectedState}`;
+  getInitialState() {
+    return {
+      assignedSummerWorkshop: this.getAssignedWorkshop()
+    }
+  },
 
+  componentDidUpdate() {
+    this.props.onAssignedWorkshopFound({assignedSummerWorkshop: this.getAssignedWorkshop()});
+  },
+
+  getAssignedWorkshop() {
+    let assignedSummerWorkshop;
+
+    if (this.props.regionalPartnerGroup === 2 || (this.props.regionalPartnerGroup === 1 && this.props.selectedCourse === 'csd')) {
+      assignedSummerWorkshop = `Summer 2017 (exact date to be determined) in ${this.props.selectedState}`;
 
       _.forEach(group2OrGroup1CsdWorkshops, (value, key) => {
         if (value.includes(this.props.selectedState)) {
           assignedSummerWorkshop = key;
         }
       });
+    } else if (this.props.regionalPartnerGroup === 1 && this.props.selectedCourse === 'csp') {
+      assignedSummerWorkshop = group1CspWorkshops[this.props.regionalPartnerName] || {region: this.props.selectedState, workshopDates: 'Summer 2017 (exact date to be determined)'};
+    }
 
+    return assignedSummerWorkshop;
+  },
+
+  renderGroup1CsdOrGroup2AssignedWorkshop() {
+    if (this.props.regionalPartnerGroup === 2 ||
+      (this.props.regionalPartnerGroup === 1 && this.props.selectedCourse === 'csd')) {
       return (
         <div>
           We strongly encourage participants to attend their assigned summer workshop (based on the region in which
           you teach), so that you can meet the other teachers, facilitators, and Regional Partners with whom you will
           work in 2017-18. Your region's assigned summer workshop is:
           <p style={{fontSize: '18px', fontWeight: 'bold'}}>
-            {assignedSummerWorkshop}
+            {this.getAssignedWorkshop()}
           </p>
         </div>
       );
@@ -76,24 +87,16 @@ const SummerWorkshopSchedule = React.createClass({
 
   renderAssignedWorkshopGroup1Csp() {
     if (this.props.regionalPartnerGroup === 1 && this.props.selectedCourse === 'csp') {
-      let regionalWorkshops = group1CspWorkshops[this.props.selectedState] || [{region: this.props.selectedState, workshopDates: 'Summer 2017 (exact date to be determined)'}];
-
       return (
         <div>
-          <p>
+          <label>
             We strongly encourage participants to attend their assigned summer workshop (based on the district in which
             you currently teach), so that you can meet the other teachers, facilitators and Regional Partners with whom
-            you will work in 2017 - 18. Your regions and summer workshop dates are below.
-            {
-              regionalWorkshops.map((workshop, i) => {
-                return (
-                  <li key={i}>
-                    {`${workshop['region']}: ${workshop['workshopDates'] || 'Summer 2017 (exact date to be determined)'}`}
-                  </li>
-                );
-              })
-            }
-          </p>
+            you will work in 2017 - 18. Your region and summer workshop dates is below.
+          </label>
+          <label>
+            {this.getAssignedWorkshop()}
+          </label>
         </div>
       );
     }

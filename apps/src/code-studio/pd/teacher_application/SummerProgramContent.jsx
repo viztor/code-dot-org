@@ -2,7 +2,7 @@ import React, {PropTypes} from 'react';
 import {Modal, Button} from 'react-bootstrap';
 
 import {ButtonList} from '../form_components/button_list.jsx';
-import {SummerWorkshopSchedule} from './SummerWorkshopSchedule';
+import {SummerWorkshopSchedule, group2OrGroup1CsdWorkshops} from './SummerWorkshopSchedule';
 
 export default React.createClass({
 
@@ -11,13 +11,16 @@ export default React.createClass({
     onChange: PropTypes.func.isRequired,
     formData: PropTypes.shape({
       committedToSummer: PropTypes.string,
-      ableToAttendAssignedSummerWorkshop: PropTypes.string
+      ableToAttendAssignedSummerWorkshop: PropTypes.string,
+      fallbackSummerWorkshops: PropTypes.string
     }).isRequired,
     errorData: PropTypes.shape({
       committedToSummer: PropTypes.string,
-      ableToAttendAssignedSummerWorkshop: PropTypes.string
+      ableToAttendAssignedSummerWorkshop: PropTypes.string,
+      fallbackSummerWorkshops: PropTypes.string
     }).isRequired,
     regionalPartnerGroup: PropTypes.number,
+    regionalPartnerName: PropTypes.string,
     selectedCourse: PropTypes.string,
     selectedState: PropTypes.string
   },
@@ -26,6 +29,11 @@ export default React.createClass({
     return {
       dialogWasDismissed: false,
     };
+  },
+
+  checkListChange(event) {
+    const selectedButtons = $(`[name=${event.target.name}]:checked`).map( (index, element) => element.value).toArray();
+    this.props.onChange({[event.target.name]: selectedButtons});
   },
 
   radioButtonListChange(event) {
@@ -85,8 +93,10 @@ export default React.createClass({
           </Modal>
           <SummerWorkshopSchedule
             regionalPartnerGroup={this.props.regionalPartnerGroup}
+            regionalPartnerName={this.props.regionalPartnerName}
             selectedCourse={this.props.selectedCourse}
             selectedState={this.props.selectedState}
+            onAssignedWorkshopFound={this.props.onChange}
           />
           <ButtonList
             type="radio"
@@ -99,6 +109,22 @@ export default React.createClass({
             required
             errorText={this.props.errorData.ableToAttendAssignedSummerWorkshop}
           />
+          {
+            this.props.formData.ableToAttendAssignedSummerWorkshop === 'No' && (
+              <ButtonList
+                type="check"
+                label="If you are not able to attend your assigned summer workshop, which of the following workshops
+                  are you available to attend? Please note that we are not able to guarantee a space for you in a
+                  different location."
+                groupName="fallbackSummerWorkshops"
+                answers={Object.keys(group2OrGroup1CsdWorkshops)}
+                onChange={this.checkListChange}
+                selectedItems={this.props.formData.fallbackSummerWorkshops}
+                required
+                errorText={this.props.errorData.fallbackSummerWorkshops}
+              />
+            )
+          }
         </div>
       </div>
     );

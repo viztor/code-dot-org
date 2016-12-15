@@ -70,6 +70,23 @@ const isPhoneNumber = (value) => {
   }
 };
 
+const prefilledFormState = {
+  gradesAtSchool: ['Kindergarten', '1'],
+  firstName: 'Benjamin',
+  preferredName: 'Ben',
+  lastName: 'Franklin',
+  primaryEmail: 'ben@upenn.edu',
+  secondaryEmail: 'benn@pa.gov',
+  phoneNumber: '555-464-7399',
+  genderIdentity: 'Male',
+  grades2016: ['1', '2'],
+  subjects2016: ['Computer Science', 'Art'],
+  grades2017: ['1', '2'],
+  subjects2017: ['Computer Science', 'Art'],
+  principalFirstName: 'George',
+  principalLastName: 'Washington'
+}
+
 const fieldValidationErrors = {
   primaryEmail: isEmail,
   secondaryEmail: isEmail,
@@ -80,13 +97,12 @@ const fieldValidationErrors = {
 const TeacherApplication = React.createClass({
 
   propTypes: {
-    regionalPartnerGroup: React.PropTypes.number
+    regionalPartnerGroup: React.PropTypes.number,
+    regionalPartnerName: React.PropTypes.string
   },
 
   getInitialState() {
-    return {
-
-    };
+    return prefilledFormState;
   },
 
   handleSubformDataChange(changedData) {
@@ -431,37 +447,6 @@ const TeacherApplication = React.createClass({
     }
   },
 
-  renderSummerProgramContent() {
-    return (
-      <div id="summerProgramContent">
-        <div style={{fontWeight: 'bold'}}>
-          As a reminder, teachers in this program are required to participate in:
-          <li>
-            One five-day summer workshop in 2017 (may require travel with expenses paid)
-          </li>
-          <li>
-            Four one-day local workshops during the 2017 - 18 school year (typically held on Saturdays)
-          </li>
-          <li>
-            20 hours of online professional development during the 2017 - 18 school year
-          </li>
-          <ButtonList
-            type="radio"
-            label="Are you committed to participating in the entire program?"
-            groupName="committedToSummer"
-            answers={yesNoResponses}
-            includeOther={true}
-            onChange={this.handleRadioButtonListChange}
-            selectedItems={this.state.committedToSummer}
-            required={true}
-            validationState={this.getRequiredValidationState('committedToSummer')}
-          />
-          {this.renderSummerWorkshopSchedule()}
-        </div>
-      </div>
-    );
-  },
-
   renderComputerScienceBeliefsPoll() {
     const csBeliefsQuestions = {
       allStudentsShouldLearn: 'All students should have the opportunity to learn computer science in school.',
@@ -601,6 +586,13 @@ const TeacherApplication = React.createClass({
       }
     });
 
+    if(formData.ableToAttendAssignedSummerWorkshop !== 'Yes') {
+      formData.fallbackSummerWorkshops = this.state.fallbackSummerWorkshops;
+
+      //The user did not fill out their fallback summer workshop, so scroll up to it before the lower items
+      fieldsToValidate.splice(fieldsToValidate.indexOf('ableToAttendAssignedSummerWorkshop') + 1, 0, 'fallbackSummerWorkshops');
+    }
+
     _.forEach(fieldsToValidate, (field) => {
       if (this.state[field] === undefined || this.state[field].length === 0) {
         this.setState({[field]: ''});
@@ -620,6 +612,8 @@ const TeacherApplication = React.createClass({
       );
     }
 
+    console.log(formData);
+
     if (topInvalidElementId) {
       let topInvalidElement = document.getElementById(topInvalidElementId);
 
@@ -629,7 +623,7 @@ const TeacherApplication = React.createClass({
         topInvalidElement.parentElement.scrollIntoView();
       }
     } else {
-      this.save(formData);
+      //this.save(formData);
     }
   },
 
@@ -643,7 +637,6 @@ const TeacherApplication = React.createClass({
     }).done(() => {
       // TODO: modify state, render submitted on client side.
       window.location.reload(true);
-
     }).fail(data => {
       // TODO: render error message(s) nicely on client.
       alert(`error: ${data.responseJSON}`);
