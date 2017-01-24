@@ -70,6 +70,7 @@ if (envConstants.COVERAGE) {
       loader: "babel",
       query: {
         cacheDirectory: true,
+        compact: false,
       }
     }, {
       test: /\.jsx?$/,
@@ -80,6 +81,7 @@ if (envConstants.COVERAGE) {
       ],
       query: {
         cacheDirectory: true,
+        compact: false,
       }
     },
   ];
@@ -117,6 +119,9 @@ var karmaConfig = _.extend({}, baseConfig, {
       '@cdo/gamelab/locale': path.resolve(__dirname, 'test', 'util', 'gamelab', 'locale-do-not-import.js'),
       '@cdo/weblab/locale': path.resolve(__dirname, 'test', 'util', 'weblab', 'locale-do-not-import.js'),
       'firebase': path.resolve(__dirname, 'test', 'util', 'MockFirebase.js'),
+      "johnny-five": path.resolve(__dirname, 'src', 'noop.js'),
+      "playground-io": path.resolve(__dirname, 'src', 'noop.js'),
+      "chrome-serialport": path.resolve(__dirname, 'src', 'noop.js'),
     }),
   }),
   externals: {
@@ -131,6 +136,7 @@ var karmaConfig = _.extend({}, baseConfig, {
   },
   plugins: [
     new webpack.ProvidePlugin({React: 'react'}),
+    new webpack.IgnorePlugin(/^serialport$/),
     new webpack.DefinePlugin({
       IN_UNIT_TEST: JSON.stringify(true),
       'process.env.mocha_entry': JSON.stringify(process.env.mocha_entry),
